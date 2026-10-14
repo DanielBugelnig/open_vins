@@ -170,7 +170,8 @@ void ROS2Visualizer::setup_subscribers(std::shared_ptr<ov_core::YamlParser> pars
   _node->declare_parameter<std::string>("topic_imu", "/imu0");
   _node->get_parameter("topic_imu", topic_imu);
   parser->parse_external("relative_config_imu", "imu0", "rostopic", topic_imu);
-  sub_imu = _node->create_subscription<sensor_msgs::msg::Imu>(topic_imu, rclcpp::SensorDataQoS(),
+  // reliable + deep queue: SensorDataQoS (best effort, depth 5) silently drops ~1/3 of the 200 Hz IMU msgs during bag replay
+  sub_imu = _node->create_subscription<sensor_msgs::msg::Imu>(topic_imu, rclcpp::QoS(rclcpp::KeepLast(150)).reliable(),
                                                               std::bind(&ROS2Visualizer::callback_inertial, this, std::placeholders::_1));
   PRINT_INFO("subscribing to IMU: %s\n", topic_imu.c_str());
 
@@ -729,17 +730,32 @@ void ROS2Visualizer::publish_groundtruth() {
   // Get the GT and system state state
   Eigen::Matrix<double, 16, 1> state_ekf = _app->get_state()->_imu->value();
 
+  // Display alignment: at the first gt pose, find the yaw + translation that maps the gt frame onto
+  // the estimate's global frame (yaw of the body x-axis, assumes the platform is roughly level)
+  Eigen::Matrix3d R_ItoG_gt = quat_2_Rot(state_gt.block(1, 0, 4, 1)).transpose();
+  if (!gt_align_init) {
+    Eigen::Matrix3d R_ItoG_ekf = quat_2_Rot(state_ekf.block(0, 0, 4, 1)).transpose();
+    double yaw = std::atan2(R_ItoG_ekf(1, 0), R_ItoG_ekf(0, 0)) - std::atan2(R_ItoG_gt(1, 0), R_ItoG_gt(0, 0));
+    gt_align_R = Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ()).toRotationMatrix();
+    gt_align_p = state_ekf.block(4, 0, 3, 1) - gt_align_R * state_gt.block(5, 0, 3, 1);
+    gt_align_init = true;
+    PRINT_INFO("groundtruth display aligned to the estimate: yaw %.1f deg, offset %.2f,%.2f,%.2f m\n", yaw * 180.0 / M_PI,
+               gt_align_p(0), gt_align_p(1), gt_align_p(2));
+  }
+  Eigen::Vector4d q_GtoI_disp = rot_2_quat((gt_align_R * R_ItoG_gt).transpose());
+  Eigen::Vector3d p_IinG_disp = gt_align_R * state_gt.block(5, 0, 3, 1) + gt_align_p;
+
   // Create pose of IMU
   geometry_msgs::msg::PoseStamped poseIinM;
   poseIinM.header.stamp = ROSVisualizerHelper::get_time_from_seconds(timestamp_inI);
   poseIinM.header.frame_id = "global";
-  poseIinM.pose.orientation.x = state_gt(1, 0);
-  poseIinM.pose.orientation.y = state_gt(2, 0);
-  poseIinM.pose.orientation.z = state_gt(3, 0);
-  poseIinM.pose.orientation.w = state_gt(4, 0);
-  poseIinM.pose.position.x = state_gt(5, 0);
-  poseIinM.pose.position.y = state_gt(6, 0);
-  poseIinM.pose.position.z = state_gt(7, 0);
+  poseIinM.pose.orientation.x = q_GtoI_disp(0);
+  poseIinM.pose.orientation.y = q_GtoI_disp(1);
+  poseIinM.pose.orientation.z = q_GtoI_disp(2);
+  poseIinM.pose.orientation.w = q_GtoI_disp(3);
+  poseIinM.pose.position.x = p_IinG_disp(0);
+  poseIinM.pose.position.y = p_IinG_disp(1);
+  poseIinM.pose.position.z = p_IinG_disp(2);
   pub_posegt->publish(poseIinM);
 
   // Append to our pose vector
@@ -761,13 +777,10 @@ void ROS2Visualizer::publish_groundtruth() {
   trans.header.stamp = _node->now();
   trans.header.frame_id = "global";
   trans.child_frame_id = "truth";
-  trans.transform.rotation.x = state_gt(1, 0);
-  trans.transform.rotation.y = state_gt(2, 0);
-  trans.transform.rotation.z = state_gt(3, 0);
-  trans.transform.rotation.w = state_gt(4, 0);
-  trans.transform.translation.x = state_gt(5, 0);
-  trans.transform.translation.y = state_gt(6, 0);
-  trans.transform.translation.z = state_gt(7, 0);
+  trans.transform.rotation = poseIinM.pose.orientation;
+  trans.transform.translation.x = p_IinG_disp(0);
+  trans.transform.translation.y = p_IinG_disp(1);
+  trans.transform.translation.z = p_IinG_disp(2);
   if (publish_global2imu_tf) {
     mTfBr->sendTransform(trans);
   }

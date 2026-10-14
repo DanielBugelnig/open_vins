@@ -200,6 +200,12 @@ protected:
 
   // For path viz
   std::vector<geometry_msgs::msg::PoseStamped> poses_gt;
+
+  // Display-only alignment of the groundtruth to the estimate (yaw + position at the first gt pose),
+  // since global yaw and position are unobservable. Errors and saved files use the raw groundtruth.
+  bool gt_align_init = false;
+  Eigen::Matrix3d gt_align_R = Eigen::Matrix3d::Identity();
+  Eigen::Vector3d gt_align_p = Eigen::Vector3d::Zero();
   bool publish_global2imu_tf = true;
   bool publish_calibration_tf = true;
 

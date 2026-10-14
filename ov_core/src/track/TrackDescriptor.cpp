@@ -483,6 +483,11 @@ void TrackDescriptor::robust_match(const std::vector<cv::KeyPoint> &pts0, const 
   // Our 1to2 and 2to1 match vectors
   std::vector<std::vector<cv::DMatch>> matches0to1, matches1to0;
 
+  // Nothing to match if an image gave no descriptors (no features, or ORB dropped all of them at the
+  // border): knnMatch would abort on the empty matrix (batchDistance type assertion)
+  if (desc0.empty() || desc1.empty())
+    return;
+
   // Match descriptors (return 2 nearest neighbours)
   matcher->knnMatch(desc0, desc1, matches0to1, 2);
   matcher->knnMatch(desc1, desc0, matches1to0, 2);

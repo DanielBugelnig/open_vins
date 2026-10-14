@@ -41,9 +41,49 @@ launch_args = [
         description="how many cameras we have 1 = mono, 2 = stereo, >2 = binocular (all mono tracking)",
     ),
     DeclareLaunchArgument(
+        name="use_klt",
+        default_value="true",
+        description="true = FAST + KLT tracking, false = FAST + ORB descriptor matching",
+    ),
+    DeclareLaunchArgument(
+        name="record_timing_information",
+        default_value="false",
+        description="write per-frame computation times of the estimator to record_timing_filepath",
+    ),
+    DeclareLaunchArgument(
+        name="record_timing_filepath",
+        default_value="/tmp/traj_timing.txt",
+        description="where record_timing_information writes the timings (absolute path)",
+    ),
+    DeclareLaunchArgument(
         name="save_total_state",
         default_value="false",
         description="record the total state with calibration and features to a txt file",
+    ),
+    DeclareLaunchArgument(
+        name="filepath_est",
+        default_value="/catkin_ws/results/state_estimate.txt",
+        description="where save_total_state writes the estimate (absolute path)",
+    ),
+    DeclareLaunchArgument(
+        name="filepath_std",
+        default_value="/catkin_ws/results/state_deviation.txt",
+        description="where save_total_state writes the standard deviations (absolute path)",
+    ),
+    DeclareLaunchArgument(
+        name="dataset",
+        default_value="",
+        description="dataset name (e.g. V1_01_easy); loads groundtruth from <ov_data_dir>/<config>/<dataset>.csv",
+    ),
+    DeclareLaunchArgument(
+        name="ov_data_dir",
+        default_value="/catkin_ws/src/open_vins/ov_data",
+        description="folder with the groundtruth files (ov_data does not install them)",
+    ),
+    DeclareLaunchArgument(
+        name="path_gt",
+        default_value="",
+        description="path to a groundtruth csv (ASL format). If not given, determined based on 'dataset' above",
     )
 ]
 
@@ -74,6 +114,21 @@ def launch_setup(context):
                         config_path)
                     )
             ]
+    path_gt = LaunchConfiguration("path_gt").perform(context)
+    dataset = LaunchConfiguration("dataset").perform(context)
+    if not path_gt and dataset:
+        path_gt = os.path.join(
+                    LaunchConfiguration("ov_data_dir").perform(context),
+                    LaunchConfiguration("config").perform(context),
+                    dataset + ".csv"
+                )
+    if path_gt and not os.path.isfile(path_gt):
+        return [
+            LogInfo(
+                msg="ERROR: groundtruth file: '{}' - does not exist. - not starting OpenVINS".format(
+                    path_gt)
+                )
+        ]
     node1 = Node(
         package="ov_msckf",
         executable="run_subscribe_msckf",
@@ -84,8 +139,14 @@ def launch_setup(context):
             {"verbosity": LaunchConfiguration("verbosity")},
             {"use_stereo": LaunchConfiguration("use_stereo")},
             {"max_cameras": LaunchConfiguration("max_cameras")},
+            {"use_klt": LaunchConfiguration("use_klt")},
+            {"record_timing_information": LaunchConfiguration("record_timing_information")},
+            {"record_timing_filepath": LaunchConfiguration("record_timing_filepath")},
             {"save_total_state": LaunchConfiguration("save_total_state")},
+            {"filepath_est": LaunchConfiguration("filepath_est")},
+            {"filepath_std": LaunchConfiguration("filepath_std")},
             {"config_path": config_path},
+            {"path_gt": path_gt},
         ],
     )
 
