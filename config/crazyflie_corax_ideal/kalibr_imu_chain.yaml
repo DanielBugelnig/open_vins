@@ -1,0 +1,39 @@
+%YAML:1.0
+
+# Bosch BMI088 of the Crazyflie (profile imu section). Noise densities: the largest axis
+# x 1; random walks x 10 (slack for scale and misalignment errors,
+# which the noise model does not cover; the EuRoC paper suggests a small increase too).
+imu0:
+  T_i_b:
+    - [1.0, 0.0, 0.0, 0.0]
+    - [0.0, 1.0, 0.0, 0.0]
+    - [0.0, 0.0, 1.0, 0.0]
+    - [0.0, 0.0, 0.0, 1.0]
+  accelerometer_noise_density: 1.8600e-03  # [ m / s^2 / sqrt(Hz) ]
+  accelerometer_random_walk: 1.0000e-05    # [ m / s^3 / sqrt(Hz) ]
+  gyroscope_noise_density: 2.4400e-04     # [ rad / s / sqrt(Hz) ]
+  gyroscope_random_walk: 1.3000e-05       # [ rad / s^2 / sqrt(Hz) ]
+  rostopic: /imu0
+  time_offset: 0.0
+  update_rate: 200.0
+  model: "kalibr"
+  Tw:
+    - [ 1.0, 0.0, 0.0 ]
+    - [ 0.0, 1.0, 0.0 ]
+    - [ 0.0, 0.0, 1.0 ]
+  R_IMUtoGYRO:
+    - [ 1.0, 0.0, 0.0 ]
+    - [ 0.0, 1.0, 0.0 ]
+    - [ 0.0, 0.0, 1.0 ]
+  Ta:
+    - [ 1.0, 0.0, 0.0 ]
+    - [ 0.0, 1.0, 0.0 ]
+    - [ 0.0, 0.0, 1.0 ]
+  R_IMUtoACC:
+    - [ 1.0, 0.0, 0.0 ]
+    - [ 0.0, 1.0, 0.0 ]
+    - [ 0.0, 0.0, 1.0 ]
+  Tg:
+    - [ 0.0, 0.0, 0.0 ]
+    - [ 0.0, 0.0, 0.0 ]
+    - [ 0.0, 0.0, 0.0 ]
