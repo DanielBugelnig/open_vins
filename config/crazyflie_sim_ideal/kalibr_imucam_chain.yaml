@@ -1,0 +1,18 @@
+%YAML:1.0
+
+# AI-deck (Himax HM01B0) in CrazySim, ideal variant (written by record_vio_dataset.py --ideal):
+# crazyflie_sim with the true T_imu_cam, including the simulated mounting error of this seed and drone.
+cam0:
+  T_imu_cam: #rotation from camera to IMU R_CtoI, position of camera in IMU p_CinI
+    - [-0.0211143459, -0.0085842556, 0.9997402137, 0.0150000000]
+    - [-0.9996716046, 0.0147052501, -0.0209866305, 0.0000000000]
+    - [-0.0145212753, -0.9998550226, -0.0088919283, -0.0080000000]
+    - [0.0000000000, 0.0000000000, 0.0000000000, 1.0000000000]
+  cam_overlaps: []
+  camera_model: pinhole
+  distortion_coeffs: [-0.09629670299141545, 0.005861351509604647, -3.5530787269707684e-05, 0.0008847188798398621]
+  distortion_model: radtan
+  intrinsics: [177.3479750370059, 176.90021158090644, 164.67666941576744, 165.29001238101867] #fu, fv, cu, cv
+  resolution: [324, 244]
+  rostopic: /cam0/image_raw
+  timeshift_cam_imu: 0.0
