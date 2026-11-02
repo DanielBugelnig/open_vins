@@ -1,0 +1,34 @@
+%YAML:1.0
+
+# euroc camera rig on the CrazySim Crazyflie (written by euroc_postprocess.py).
+# T_imu_cam: camera -> IMU (Crazyflie body: x forward, y left, z up).
+
+cam0:
+  T_imu_cam: #rotation from camera to IMU R_CtoI, position of camera in IMU p_CinI
+    - [-0.0191357328, -0.3384497564, 0.9407898735, 0.0018177055]
+    - [-0.9995572490, -0.0149672133, -0.0257155299, 0.0646769868]
+    - [0.0227844176, -0.9408654234, -0.3380134988, -0.0236905525]
+    - [0.0000000000, 0.0000000000, 0.0000000000, 1.0000000000]
+  cam_overlaps: [1]
+  camera_model: pinhole
+  distortion_coeffs: [-0.28340811, 0.07395907, 0.00019359, 1.76187114e-05]
+  distortion_model: radtan
+  intrinsics: [458.654, 457.296, 367.215, 248.375] #fu, fv, cu, cv
+  resolution: [752, 480]
+  rostopic: /cam0/image_raw
+  timeshift_cam_imu: 0.0
+
+cam1:
+  T_imu_cam: #rotation from camera to IMU R_CtoI, position of camera in IMU p_CinI
+    - [-0.0195644543, -0.3251153360, 0.9454719723, 0.0006010838]
+    - [-0.9995987812, -0.0130119052, -0.0251588363, -0.0453689425]
+    - [0.0204819152, -0.9455848500, -0.3247303227, -0.0213358499]
+    - [0.0000000000, 0.0000000000, 0.0000000000, 1.0000000000]
+  cam_overlaps: [0]
+  camera_model: pinhole
+  distortion_coeffs: [-0.28368365, 0.07451284, -0.00010473, -3.555907e-05]
+  distortion_model: radtan
+  intrinsics: [457.587, 456.134, 379.999, 255.238] #fu, fv, cu, cv
+  resolution: [752, 480]
+  rostopic: /cam1/image_raw
+  timeshift_cam_imu: 0.0
