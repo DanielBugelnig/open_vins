@@ -1,0 +1,18 @@
+%YAML:1.0
+
+# cam1 of px4_starling2_corax_ideal alone, as cam0 (scripts/openvins/make_cam_config.py)
+
+cam0:
+  T_imu_cam: #rotation from camera to IMU R_CtoI, position of camera in IMU p_CinI
+    - [-0.0045764017, 0.7088002531, 0.7053943987, 0.0250000000]
+    - [-0.9999689867, -0.0077650737, 0.0013150465, 0.0000000000]
+    - [0.0064095448, -0.7053665039, 0.7088138070, 0.0050000000]
+    - [0.0000000000, 0.0000000000, 0.0000000000, 1.0000000000]
+  cam_overlaps: []
+  camera_model: pinhole
+  distortion_coeffs: [0.1496922, -0.03575305, 0.0, 0.0]
+  distortion_model: equidistant
+  intrinsics: [461.6666667, 461.6666667, 639.5, 399.5] #fu, fv, cu, cv
+  resolution: [1280, 800]
+  rostopic: /cam1/image_raw
+  timeshift_cam_imu: 0.0
